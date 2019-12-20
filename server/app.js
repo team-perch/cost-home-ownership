@@ -69,4 +69,16 @@ app.get('/api/costHomeOwnership/rates', async (req, res) => {
   }
 });
 
+app.post('/api/costHomeOwnership/rates', async (req, res) => {
+  // Write function to post req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be overwritten
+});
+
+app.put('/api/costHomeOwnership/rates', async (req, res) => {
+// Write function to update req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be created new
+});
+
+app.delete('/api/costHomeOwnership/rates', async (req, res) => {
+// Write function to delete req.body to the database based on the propertyId. If the propertyId doesn't exist, confirm with user what they want to delete
+});
+
 module.exports = app;

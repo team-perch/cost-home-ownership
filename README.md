@@ -1,13 +1,14 @@
 # Project Name
 
-> fRiend - Cost of Home Ownership module
+> Perch - Payment Calculator Backend
 
 ## Related Projects
 
-  - https://github.com/teamName/repo
-  - https://github.com/teamName/repo
-  - https://github.com/teamName/repo
-  - https://github.com/teamName/repo
+  - https://github.com/fRiend-hrsf124/costHomeOwnership-service
+  - https://github.com/fRiend-hrsf124/costHomeOwnership-proxy
+  - https://github.com/team-perch/graph
+  - https://github.com/team-perch/imageGallery
+  - https://github.com/team-perch
 
 ## Table of Contents
 
