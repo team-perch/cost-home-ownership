@@ -107,38 +107,50 @@ npm install
 
 ## GENERAL
 Client side individual pages get rendered at:
-    http:// [[SERVER NAME OR IP ADDRESS]] :3001/?id= [[ NUMBER BETWEEN 1 AND 100 ]]
-   For example:
-    http://localhost:3001/?id=2
-
+```
+http:// [[SERVER NAME OR IP ADDRESS]] :3001/?id= [[ NUMBER BETWEEN 1 AND 100 ]]
+```
+For example:
+```
+http://localhost:3001/?id=2
+```
 
 ## PROPERTIES
 
 ### GET REQUEST
 GET request is sent to address:
-  http:// [[SERVER NAME OR IP ADDRESS]] :3001/api/costHomeOwnership/properties?id=${id}
+```
+http:// [[SERVER NAME OR IP ADDRESS]] :3001/api/costHomeOwnership/properties?id=${id}
+```
 
 Query parameter: id number between 1 and 100
 
 For example:
-    http://localhost:3001/api/costHomeOwnership/properties?id=2
+```
+http://localhost:3001/api/costHomeOwnership/properties?id=2
+```
 
 The result returned looks like the below:
-```    [
+```
+[
       {"propertyId":2,
       "zipCode":"74716",
       "redfinCostEstimate":780000,
       "insuranceRate":"0.130",
       "propertyTaxRate":"0.900"}
-    ]
+]
 ```
 
 ### POST REQUEST
 POST request is sent to address:
-    http:// [[SERVER NAME OR IP ADDRESS]] :3001/api/costHomeOwnership/properties
+```
+http:// [[SERVER NAME OR IP ADDRESS]] :3001/api/costHomeOwnership/properties
+```
 
 For example:
+```
     http://localhost:3001/api/costHomeOwnership/properties
+```
 
 Ensure data to be sent follows below format:
 ```   {"propertyId":2,
