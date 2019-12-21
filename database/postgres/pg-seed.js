@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const faker = require('faker/locale/en_US');
+const fs = require('fs');
 const { dbConn, createDbTables, cleanDbTables } = require('./pg-index');
 
 const seedZips = (conn, zips) => {
@@ -23,7 +24,7 @@ const seedZips = (conn, zips) => {
   return conn.query(query);
 };
 
-const seedProperties = (conn, zips) => {
+const buildPropertiesQuery = (conn, zips) => {
   const costLow = 600000;
   const costHigh = 2000000;
 
@@ -62,7 +63,8 @@ const seedProperties = (conn, zips) => {
     query += partialQuery;
   }
 
-  return conn.query(query);
+  // return conn.query(query);
+  return query;
 };
 
 const seedLenders = (conn) => {
@@ -160,8 +162,26 @@ const seedDb = async (conn) => {
   await seedZips(db, sharedZips);
   console.log('seeded zips table');
 
-  await seedProperties(db, sharedZips);
-  console.log('seeded properties table');
+  // await seedProperties(db, sharedZips);
+  // console.log('seeded properties table');
+  const query = await buildPropertiesQuery(db, sharedZips);
+  await fs.writeFile(`queries/query.txt`, query, (err) => {
+    if (err) {
+      throw err;
+    } else {
+      console.log(`Wrote the file for query!`);
+      fs.readFile(`queries/query.txt`, 'utf8', (err, data) => {
+        if (err) {
+          console.log('cannot read file', err)
+        }
+        db.query(data)
+          .then(() => {
+            console.log('I read the file!!')
+          });
+      });
+    }
+  });
+  console.log(`built query for properties table`);
 
   await seedLenders(db);
   console.log('seeded lenders table');
@@ -169,7 +189,7 @@ const seedDb = async (conn) => {
   await seedLoans(db, sharedZips);
   console.log('seeded loans table');
 
-  await db.end();
+  // await db.end();
 };
 
 seedDb(dbConn).catch(console.log);
