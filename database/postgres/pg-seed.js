@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const faker = require('faker/locale/en_US');
-const { dbConn, createDbTables, cleanDbTables } = require('./index');
+const { dbConn, createDbTables, cleanDbTables } = require('./pg-index');
 
 const seedZips = (conn, zips) => {
   const taxLow = 0.8;
@@ -14,7 +14,7 @@ const seedZips = (conn, zips) => {
       zip_code,
       property_tax_rate
       ) VALUES (
-      "${zip}",
+      ${zip},
       ${taxRate}
     );\n`;
     query += partialQuery;
@@ -25,27 +25,39 @@ const seedZips = (conn, zips) => {
 
 const seedProperties = (conn, zips) => {
   const costLow = 600000;
-  const costRange = 2000000;
+  const costHigh = 2000000;
 
   const insuranceLow = 0.1;
-  const insuranceRange = 0.2;
+  const insuranceHigh = 0.2;
+
+  const hoaDuesLow = 0;
+  const hoaDuesHigh = 1000;
+
+  const constructionYearLow = 1900;
+  const constructionYearHigh = 2019;
 
   const propertyCount = 100;
   let query = '';
   for (let i = 1; i <= propertyCount; i += 1) {
     const zip = zips[faker.random.number(zips.length - 1)];
-    const cost = costLow + faker.random.number(costRange / 10000) * 10000;
-    const insuranceRate = insuranceLow + faker.random.number(insuranceRange * 100) / 100;
+    const cost = costLow + faker.random.number(costHigh / 10000) * 10000;
+    const insuranceRate = insuranceLow + faker.random.number(insuranceHigh * 100) / 100;
+    const hoaDues = hoaDuesLow + faker.random.number(hoaDuesHigh / 10) * 10;
+    const constrYear = constructionYearLow + faker.random.number(constructionYearHigh);
     const partialQuery = `INSERT INTO properties (
       property_id,
       zip_code,
-      redfin_cost_estimate,
-      insurance_rate
+      property_cost,
+      home_insurance_rate,
+      hoa_monthly_dues,
+      construction_year
       ) VALUES (
         ${i},
-        "${zip}",
+        ${zip},
         ${cost},
-        ${insuranceRate}
+        ${insuranceRate},
+        ${hoaDues},
+        ${constrYear}
       );\n`;
     query += partialQuery;
   }
@@ -69,7 +81,7 @@ const seedLenders = (conn) => {
       lender_logo_url,
       lender_nmls
       ) VALUES (
-        "${lenderLogoUrls[i]}",
+        '${lenderLogoUrls[i]}',
         ${nmls}
       );\n`;
     query += partialQuery;
@@ -78,7 +90,7 @@ const seedLenders = (conn) => {
   return conn.query(query);
 };
 
-const seedRates = (conn, zips) => {
+const seedLoans = (conn, zips) => {
   // weighted toward more popular options
   const terms = [3, 5, 7, 10, 10, 15, 15, 20, 30, 30, 30, 30];
   const types = ['ARM', 'Fixed', 'Fixed'];
@@ -98,7 +110,7 @@ const seedRates = (conn, zips) => {
     const creditMin = faker.random.number({ min: 660, max: 740, precision: 20 });
     const lenderId = faker.random.number({ min: 1, max: 3 });
 
-    const partialQuery = `INSERT INTO rates (
+    const partialQuery = `INSERT INTO loans (
       zip_code,
       apr,
       term,
@@ -110,10 +122,10 @@ const seedRates = (conn, zips) => {
       lender_id,
       origination_year
     ) VALUES (
-      "${zip}",
+      ${zip},
       ${apr},
       ${term},
-      "${type}",
+      '${type}',
       ${low},
       ${high},
       ${downPaymentMin},
@@ -154,8 +166,8 @@ const seedDb = async (conn) => {
   await seedLenders(db);
   console.log('seeded lenders table');
 
-  await seedRates(db, sharedZips);
-  console.log('seeded rates table');
+  await seedLoans(db, sharedZips);
+  console.log('seeded loans table');
 
   await db.end();
 };
