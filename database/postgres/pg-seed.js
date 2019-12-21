@@ -36,7 +36,7 @@ const seedProperties = (conn, zips) => {
   const constructionYearLow = 1900;
   const constructionYearHigh = 2019;
 
-  const propertyCount = 100;
+  const propertyCount = 1000000;
   let query = '';
   for (let i = 1; i <= propertyCount; i += 1) {
     const zip = zips[faker.random.number(zips.length - 1)];
