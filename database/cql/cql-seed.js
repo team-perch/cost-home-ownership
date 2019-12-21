@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const faker = require('faker/locale/en_US');
-const { dbConn, createDbTables, cleanDbTables } = require('./index');
+const { dbConn, createDbTables, cleanDbTables } = require('./cql-index');
 
 const seedZips = (conn, zips) => {
   const taxLow = 0.8;
@@ -10,7 +10,7 @@ const seedZips = (conn, zips) => {
   for (let i = 0; i < zips.length; i += 1) {
     const zip = zips[i];
     const taxRate = taxLow + faker.random.number(taxRange * 1000) / 1000;
-    const partialQuery = `INSERT INTO zips (
+    const partialQuery = `INSERT INTO costs.zips (
       zip_code,
       property_tax_rate
       ) VALUES (
@@ -36,13 +36,13 @@ const seedProperties = (conn, zips) => {
     const zip = zips[faker.random.number(zips.length - 1)];
     const cost = costLow + faker.random.number(costRange / 10000) * 10000;
     const insuranceRate = insuranceLow + faker.random.number(insuranceRange * 100) / 100;
-    const partialQuery = `INSERT INTO properties (
+    const partialQuery = `INSERT INTO costs.properties (
       property_id,
       zip_code,
       redfin_cost_estimate,
       insurance_rate
       ) VALUES (
-        ${i},
+        uuid(),
         "${zip}",
         ${cost},
         ${insuranceRate}
@@ -65,7 +65,7 @@ const seedLenders = (conn) => {
   let query = '';
   for (let i = 0; i < lenderCount; i += 1) {
     const nmls = faker.random.number({ min: 100000, max: 999999 });
-    const partialQuery = `INSERT INTO lenders (
+    const partialQuery = `INSERT INTO costs.lenders (
       lender_logo_url,
       lender_nmls
       ) VALUES (
@@ -98,7 +98,7 @@ const seedRates = (conn, zips) => {
     const creditMin = faker.random.number({ min: 660, max: 740, precision: 20 });
     const lenderId = faker.random.number({ min: 1, max: 3 });
 
-    const partialQuery = `INSERT INTO rates (
+    const partialQuery = `INSERT INTO costs.rates (
       zip_code,
       apr,
       term,

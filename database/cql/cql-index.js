@@ -1,9 +1,7 @@
 /* eslint-disable no-console */
-const mysql = require('mysql2/promise');
-// const mysql = require('mysql2');
 const fs = require('fs');
 const path = require('path');
-const auth = require('./auth');
+const auth = require('./cql-auth');
 
 const createDbConn = async (scopeAuth) => {
   const env = process.env.NODE_ENV || 'dev';
@@ -11,20 +9,38 @@ const createDbConn = async (scopeAuth) => {
     user, password, host,
   } = scopeAuth[env];
 
-  const conn = await mysql.createConnection({
-    host,
-    user,
-    password,
-    multipleStatements: true,
-  });
+  const options = {
+    contactPoints,
+    localDataCenter,
+    pooling: {
+      coreConnectionsPerHost: {
+        [distance.local]: 2,
+        [distance.remote]: 1
+      }
+    }
+  };
 
-  const database = `fRiend_${env}`;
+  const client = new Client(options);
+
+  const state = client.getState();
+  for (let host of state.getConnectedHosts()) {
+    console.log('Host %s: open connections = %d; in flight queries = %d',
+      host.address, state.getOpenConnections(host), state.getInFlightQueries(host));
+  }
+
+
+  const database = `perch_${env}`;
   const query = `
-    CREATE DATABASE IF NOT EXISTS ${database};
+    DROP KEYSPACE ${database} IF EXISTS;
+    CREATE KEYSPACE ${database} WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+
     USE ${database};
   `;
   await conn.query(query);
   await conn.end();
+
+
+
 
   let pool;
   try {
@@ -47,7 +63,7 @@ const createDbConn = async (scopeAuth) => {
 };
 
 const createDbTables = (conn) => {
-  const schemaFile = path.resolve(__dirname, 'schema.sql');
+  const schemaFile = path.resolve(__dirname, 'cql-schema.cql');
   const createDBQuery = fs.readFileSync(schemaFile).toString();
 
   return conn.query(createDBQuery);
