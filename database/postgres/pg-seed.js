@@ -43,7 +43,7 @@ const seedProperties = (conn, zips) => {
     const cost = costLow + faker.random.number(costHigh / 10000) * 10000;
     const insuranceRate = insuranceLow + faker.random.number(insuranceHigh * 100) / 100;
     const hoaDues = hoaDuesLow + faker.random.number(hoaDuesHigh / 10) * 10;
-    const constrYear = constructionYearLow + faker.random.number(constructionYearHigh);
+    const constrYear = faker.random.number({ min: constructionYearLow, max: constructionYearHigh });;
     const partialQuery = `INSERT INTO properties (
       property_id,
       zip_code,
@@ -95,9 +95,9 @@ const seedLoans = (conn, zips) => {
   const terms = [3, 5, 7, 10, 10, 15, 15, 20, 30, 30, 30, 30];
   const types = ['ARM', 'Fixed', 'Fixed'];
 
-  const rateCount = 1000;
+  const loanCount = 10;
   let query = '';
-  for (let i = 0; i < rateCount; i += 1) {
+  for (let i = 0; i < loanCount; i += 1) {
     const zip = zips[faker.random.number(zips.length - 1)];
     const apr = faker.random.number({ min: 4, max: 5.25, precision: 0.001 });
     const type = types[faker.random.number(types.length - 1)];
