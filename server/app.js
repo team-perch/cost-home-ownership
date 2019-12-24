@@ -2,6 +2,7 @@
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 const compression = require('compression');
 const controller = require('./controller');
 const keysToCamel = require('./camelCaseUtil');
@@ -11,6 +12,9 @@ app.use(cors());
 app.use(compression());
 
 app.use(express.static(path.resolve(__dirname, '..', 'public')));
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// PROPERTIES
 
 app.get('/api/costHomeOwnership/properties', async (req, res) => {
   // TODO - check security implications
@@ -19,7 +23,6 @@ app.get('/api/costHomeOwnership/properties', async (req, res) => {
     res.status(400).end('missing query parameters');
     return;
   }
-
   try {
     const [properties] = await controller.getPropertyData(id);
     res.json(keysToCamel(properties));
@@ -27,6 +30,21 @@ app.get('/api/costHomeOwnership/properties', async (req, res) => {
     res.status(500).end('server could not retrieve property data');
   }
 });
+
+app.post('/api/costHomeOwnership/properties', async (req, res) => {
+  // Write function to post req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be overwritten
+});
+
+app.put('/api/costHomeOwnership/properties', async (req, res) => {
+// Write function to update req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be created new
+});
+
+app.delete('/api/costHomeOwnership/properties', async (req, res) => {
+// Write function to delete req.body to the database based on the propertyId. If the propertyId doesn't exist, confirm with user what they want to delete
+});
+
+
+// RATES
 
 app.get('/api/costHomeOwnership/rates', async (req, res) => {
   // TODO - check security implications
@@ -38,11 +56,9 @@ app.get('/api/costHomeOwnership/rates', async (req, res) => {
       return;
     }
   }
-
   const {
     cost, zipCode, term, type, downPay, credit, origYear,
   } = queries;
-
   try {
     const [rates] = await controller.getRates(
       cost, zipCode, term, type, downPay, credit, origYear,
@@ -51,6 +67,18 @@ app.get('/api/costHomeOwnership/rates', async (req, res) => {
   } catch (err) {
     res.status(500).end('server could not retrieve rates data');
   }
+});
+
+app.post('/api/costHomeOwnership/rates', async (req, res) => {
+  // Write function to post req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be overwritten
+});
+
+app.put('/api/costHomeOwnership/rates', async (req, res) => {
+// Write function to update req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be created new
+});
+
+app.delete('/api/costHomeOwnership/rates', async (req, res) => {
+// Write function to delete req.body to the database based on the propertyId. If the propertyId doesn't exist, confirm with user what they want to delete
 });
 
 module.exports = app;

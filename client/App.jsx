@@ -90,6 +90,7 @@ class App extends React.Component {
       .join('&');
 
     try {
+      console.log(`${host}/api/costHomeOwnership/rates?${queryString}`);
       const res = await axios.get(`${host}/api/costHomeOwnership/rates?${queryString}`);
       const rates = await res.data;
 
