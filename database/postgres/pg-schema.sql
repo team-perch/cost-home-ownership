@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS zips(
 
 -- property id is not set to serial/auto-increment to preserve behavior of endpoints from 1 to 1,000,000
 CREATE TABLE IF NOT EXISTS properties(
-  property_id INTEGER NOT NULL,
+  property_id SERIAL,
   zip_code INTEGER,
   property_cost MONEY,
   home_insurance_rate DECIMAL(5,3),

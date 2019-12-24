@@ -24,7 +24,7 @@ const seedZips = (conn, zips) => {
   return conn.query(query);
 };
 
-const buildPropertiesQuery = (conn, zips) => {
+const buildPropertiesQuery = async (conn, zips) => {
   const costLow = 600000;
   const costHigh = 2000000;
 
@@ -37,34 +37,50 @@ const buildPropertiesQuery = (conn, zips) => {
   const constructionYearLow = 1900;
   const constructionYearHigh = 2019;
 
-  const propertyCount = 1000000;
-  let query = '';
-  for (let i = 1; i <= propertyCount; i += 1) {
-    const zip = zips[faker.random.number(zips.length - 1)];
-    const cost = costLow + faker.random.number(costHigh / 10000) * 10000;
-    const insuranceRate = insuranceLow + faker.random.number(insuranceHigh * 100) / 100;
-    const hoaDues = hoaDuesLow + faker.random.number(hoaDuesHigh / 10) * 10;
-    const constrYear = faker.random.number({ min: constructionYearLow, max: constructionYearHigh });;
-    const partialQuery = `INSERT INTO properties (
-      property_id,
+  const multiplier = 10; // need to break it up because string is limited in number of chars allowed
+  const propertyCount = 10;
+
+  for (let i = 1; i <= multiplier; i += 1) {
+    let query = '';
+    for (let j = 1; j <= propertyCount; j += 1) {
+      const zip = zips[faker.random.number(zips.length - 1)];
+      const cost = costLow + faker.random.number(costHigh / 10000) * 10000;
+      const insuranceRate = insuranceLow + faker.random.number(insuranceHigh * 100) / 100;
+      const hoaDues = hoaDuesLow + faker.random.number(hoaDuesHigh / 10) * 10;
+      const constrYear = faker.random.number({ min: constructionYearLow, max: constructionYearHigh });
+      const partialQuery = `INSERT INTO properties (
       zip_code,
       property_cost,
       home_insurance_rate,
       hoa_monthly_dues,
       construction_year
       ) VALUES (
-        ${i},
         ${zip},
         ${cost},
         ${insuranceRate},
         ${hoaDues},
         ${constrYear}
       );\n`;
-    query += partialQuery;
+      query += partialQuery;
+    }
+    await fs.writeFile(`queries/query${i}.txt`, query, (err) => {
+      if (err) {
+        throw err;
+      }
+      console.log(`I wrote the file ${i}!`);
+      fs.readFile(`queries/query${i}.txt`, 'utf8', (err, data) => {
+        if (err) {
+          console.log('cannot read file', err);
+        }
+        conn.query(data)
+          .then(() => {
+            console.log(`I read the file ${i}!`);
+          });
+      });
+    });
   }
-
   // return conn.query(query);
-  return query;
+  return;
 };
 
 const seedLenders = (conn) => {
@@ -162,26 +178,45 @@ const seedDb = async (conn) => {
   await seedZips(db, sharedZips);
   console.log('seeded zips table');
 
-  // await seedProperties(db, sharedZips);
-  // console.log('seeded properties table');
-  const query = await buildPropertiesQuery(db, sharedZips);
-  await fs.writeFile(`queries/query.txt`, query, (err) => {
-    if (err) {
-      throw err;
-    } else {
-      console.log(`Wrote the file for query!`);
-      fs.readFile(`queries/query.txt`, 'utf8', (err, data) => {
-        if (err) {
-          console.log('cannot read file', err)
-        }
-        db.query(data)
-          .then(() => {
-            console.log('I read the file!!')
-          });
-      });
-    }
-  });
-  console.log(`built query for properties table`);
+  // // await seedProperties(db, sharedZips);
+  // // console.log('seeded properties table');
+  // const queryArr = await buildPropertiesQuery(db, sharedZips);
+  // await queryArr.forEach((element, index) => {
+  //   fs.writeFile(`queries/query${index}.txt`, queryArr, (err) => {
+  //     if (err) {
+  //       throw err;
+  //     } else {
+  //       console.log(`Wrote the file for query ${index}!`);
+  //       fs.readFile(`queries/query${index}.txt`, 'utf8', (err, data) => {
+  //         if (err) {
+  //           console.log('cannot read file', err)
+  //         }
+  //         db.query(data)
+  //           .then(() => {
+  //             console.log('I read the file!!')
+  //           });
+  //       });
+  //     }
+  //   });
+  // });
+  // console.log(`built query for properties table`);
+
+  // const queryArr = await buildPropertiesQuery(db, sharedZips);
+
+  // await queryArr.forEach((element, index) => {
+  //   fs.readFile(`queries/query${index}.txt`, 'utf8', (err, data) => {
+  //     if (err) {
+  //       console.log('cannot read file', err)
+  //     }
+  //     db.query(data)
+  //       .then(() => {
+  //         console.log('I read the file!!')
+  //       });
+  //   });
+  // });
+
+  await buildPropertiesQuery(db, sharedZips);
+  console.log('seeded properties table');
 
   await seedLenders(db);
   console.log('seeded lenders table');
