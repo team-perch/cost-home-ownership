@@ -1,4 +1,3 @@
-
 CREATE TABLE IF NOT EXISTS properties(
   property_id uuid,
   zip_code int,
