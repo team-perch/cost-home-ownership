@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const faker = require('faker/locale/en_US');
 const fs = require('fs');
+const path = require('path');
 const { dbConn, createDbTables, cleanDbTables } = require('./pg-index');
 
 const seedZips = (conn, zips) => {
@@ -22,49 +23,6 @@ const seedZips = (conn, zips) => {
   }
 
   return conn.query(query);
-};
-
-const buildPropertiesQuery = (conn, zips) => {
-  const costLow = 600000;
-  const costHigh = 2000000;
-
-  const insuranceLow = 0.1;
-  const insuranceHigh = 0.2;
-
-  const hoaDuesLow = 0;
-  const hoaDuesHigh = 1000;
-
-  const constructionYearLow = 1900;
-  const constructionYearHigh = 2019;
-
-  const propertyCount = 1000000;
-  let query = '';
-  for (let i = 1; i <= propertyCount; i += 1) {
-    const zip = zips[faker.random.number(zips.length - 1)];
-    const cost = costLow + faker.random.number(costHigh / 10000) * 10000;
-    const insuranceRate = insuranceLow + faker.random.number(insuranceHigh * 100) / 100;
-    const hoaDues = hoaDuesLow + faker.random.number(hoaDuesHigh / 10) * 10;
-    const constrYear = faker.random.number({ min: constructionYearLow, max: constructionYearHigh });;
-    const partialQuery = `INSERT INTO properties (
-      property_id,
-      zip_code,
-      property_cost,
-      home_insurance_rate,
-      hoa_monthly_dues,
-      construction_year
-      ) VALUES (
-        ${i},
-        ${zip},
-        ${cost},
-        ${insuranceRate},
-        ${hoaDues},
-        ${constrYear}
-      );\n`;
-    query += partialQuery;
-  }
-
-  // return conn.query(query);
-  return query;
 };
 
 const seedLenders = (conn) => {
@@ -141,6 +99,50 @@ const seedLoans = (conn, zips) => {
   return conn.query(query);
 };
 
+const buildPropertiesString = async (conn, zips) => {
+  const costLow = 600000;
+  const costHigh = 2000000;
+
+  const insuranceLow = 0.1;
+  const insuranceHigh = 0.2;
+
+  const hoaDuesLow = 0;
+  const hoaDuesHigh = 1000;
+
+  const constructionYearLow = 1900;
+  const constructionYearHigh = 2019;
+
+  const propertyCount = 1000000; // edit this as needed
+  let query = '';
+  for (let j = 1; j <= propertyCount; j += 1) {
+    const zip = zips[faker.random.number(zips.length - 1)];
+    const cost = costLow + faker.random.number(costHigh / 10000) * 10000;
+    const insuranceRate = insuranceLow + faker.random.number(insuranceHigh * 100) / 100;
+    const hoaDues = hoaDuesLow + faker.random.number(hoaDuesHigh / 10) * 10;
+    const constrYear = faker.random.number({ min: constructionYearLow, max: constructionYearHigh });
+
+    const partialQuery = `${zip},${cost},${insuranceRate},${hoaDues},${constrYear}\n`;
+    query += partialQuery;
+  }
+  return query;
+};
+
+const createCSV = (query) => {
+  fs.appendFile('queries/query.csv', query, (err) => {
+    if (err) {
+      throw err;
+    }
+    console.log('I wrote the file!');
+  });
+};
+
+const seedFromCSV = (csvPath, conn) => {
+  conn.query(`COPY properties(zip_code, property_cost, home_insurance_rate, hoa_monthly_dues, construction_year) FROM '${csvPath}' DELIMITER ',';`)
+    .then(() => {
+      console.log('I read the file!');
+    });
+};
+
 const seedDb = async (conn) => {
   const db = await conn;
 
@@ -162,33 +164,21 @@ const seedDb = async (conn) => {
   await seedZips(db, sharedZips);
   console.log('seeded zips table');
 
-  // await seedProperties(db, sharedZips);
-  // console.log('seeded properties table');
-  const query = await buildPropertiesQuery(db, sharedZips);
-  await fs.writeFile(`queries/query.txt`, query, (err) => {
-    if (err) {
-      throw err;
-    } else {
-      console.log(`Wrote the file for query!`);
-      fs.readFile(`queries/query.txt`, 'utf8', (err, data) => {
-        if (err) {
-          console.log('cannot read file', err)
-        }
-        db.query(data)
-          .then(() => {
-            console.log('I read the file!!')
-          });
-      });
-    }
-  });
-  console.log(`built query for properties table`);
-
   await seedLenders(db);
   console.log('seeded lenders table');
 
   await seedLoans(db, sharedZips);
   console.log('seeded loans table');
 
+  await buildPropertiesString(db, sharedZips) // my async here is not working because the file is getting read before written for one of the 10 loops - fix later
+    .then((result) => {
+      createCSV(result);
+    })
+    .then(() => {
+      for (let i = 0; i < 10; i += 1) {
+        seedFromCSV(path.resolve('queries/query.csv'), db);
+      }
+    });
   // await db.end();
 };
 
