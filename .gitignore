@@ -27,5 +27,8 @@ public/bundle.js
 # Authentication info
 */s3credentials.*
 *.pem
+cql-auth.js
+auth.js
+pg-auth.js
 
 database/postgres/queries/
