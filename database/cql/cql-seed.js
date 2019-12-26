@@ -6,21 +6,14 @@ const seedZips = (conn, zips) => {
   const taxLow = 0.8;
   const taxRange = 0.4;
 
-  let query = '';
+  const queriesArr = [];
   for (let i = 0; i < zips.length; i += 1) {
     const zip = zips[i];
     const taxRate = taxLow + faker.random.number(taxRange * 1000) / 1000;
-    const partialQuery = `INSERT INTO costs.zips (
-      zip_code,
-      property_tax_rate
-      ) VALUES (
-      "${zip}",
-      ${taxRate}
-    );\n`;
-    query += partialQuery;
+    const partialQuery = `INSERT INTO "perch_dev"."zips" (zip_code, property_tax_rate) VALUES (${zip}, ${taxRate});`;
+    queriesArr.push(partialQuery);
   }
-
-  return conn.query(query);
+  return conn.batch(queriesArr);
 };
 
 const seedProperties = (conn, zips) => {
@@ -30,27 +23,27 @@ const seedProperties = (conn, zips) => {
   const insuranceLow = 0.1;
   const insuranceRange = 0.2;
 
-  const propertyCount = 100;
-  let query = '';
+  const propertyCount = 10;
+  const queriesArr = [];
   for (let i = 1; i <= propertyCount; i += 1) {
     const zip = zips[faker.random.number(zips.length - 1)];
     const cost = costLow + faker.random.number(costRange / 10000) * 10000;
     const insuranceRate = insuranceLow + faker.random.number(insuranceRange * 100) / 100;
-    const partialQuery = `INSERT INTO costs.properties (
+    const partialQuery = `INSERT INTO "perch_dev"."properties" (
       property_id,
       zip_code,
       redfin_cost_estimate,
       insurance_rate
       ) VALUES (
         uuid(),
-        "${zip}",
+        ${zip},
         ${cost},
         ${insuranceRate}
-      );\n`;
-    query += partialQuery;
+      );`;
+    queriesArr.push(partialQuery);
   }
 
-  return conn.query(query);
+  return conn.batch(queriesArr);
 };
 
 const seedLenders = (conn) => {
@@ -62,30 +55,24 @@ const seedLenders = (conn) => {
   ];
 
   const lenderCount = 3;
-  let query = '';
+  const queriesArr = [];
   for (let i = 0; i < lenderCount; i += 1) {
     const nmls = faker.random.number({ min: 100000, max: 999999 });
-    const partialQuery = `INSERT INTO costs.lenders (
-      lender_logo_url,
-      lender_nmls
-      ) VALUES (
-        "${lenderLogoUrls[i]}",
-        ${nmls}
-      );\n`;
-    query += partialQuery;
+    const partialQuery = `INSERT INTO "perch_dev"."lenders" (lender_id, lender_logo_url, lender_nmls) VALUES (uuid(), '${lenderLogoUrls[i]}', ${nmls});`;
+    queriesArr.push(partialQuery);
   }
 
-  return conn.query(query);
+  return conn.batch(queriesArr);
 };
 
-const seedRates = (conn, zips) => {
+const seedLoans = (conn, zips) => {
   // weighted toward more popular options
   const terms = [3, 5, 7, 10, 10, 15, 15, 20, 30, 30, 30, 30];
   const types = ['ARM', 'Fixed', 'Fixed'];
 
-  const rateCount = 1000;
-  let query = '';
-  for (let i = 0; i < rateCount; i += 1) {
+  const loanCount = 10;
+  const queriesArr = [];
+  for (let i = 0; i < loanCount; i += 1) {
     const zip = zips[faker.random.number(zips.length - 1)];
     const apr = faker.random.number({ min: 4, max: 5.25, precision: 0.001 });
     const type = types[faker.random.number(types.length - 1)];
@@ -96,9 +83,10 @@ const seedRates = (conn, zips) => {
     const high = faker.random.number({ min: 1000000, max: 3500000, precision: 100000 });
     const downPaymentMin = faker.random.number({ min: 0, max: 20, precision: 10 });
     const creditMin = faker.random.number({ min: 660, max: 740, precision: 20 });
-    const lenderId = faker.random.number({ min: 1, max: 3 });
+    // const lenderId = faker.random.number({ min: 1, max: 3 });
 
-    const partialQuery = `INSERT INTO costs.rates (
+    const partialQuery = `INSERT INTO "perch_dev"."loans" (
+      loan_id,
       zip_code,
       apr,
       term,
@@ -107,24 +95,23 @@ const seedRates = (conn, zips) => {
       cost_high,
       down_payment_min,
       credit_min,
-      lender_id,
       origination_year
     ) VALUES (
-      "${zip}",
+      uuid(),
+      '${zip}',
       ${apr},
       ${term},
-      "${type}",
+      '${type}',
       ${low},
       ${high},
       ${downPaymentMin},
       ${creditMin},
-      ${lenderId},
       2019
-    );\n`;
-    query += partialQuery;
+    );`;
+    queriesArr.push(partialQuery);
   }
 
-  return conn.query(query);
+  return conn.batch(queriesArr);
 };
 
 const seedDb = async (conn) => {
@@ -142,22 +129,27 @@ const seedDb = async (conn) => {
   await createDbTables(db);
   console.log('created database tables if non-existant');
 
-  await cleanDbTables(db);
-  console.log('cleaned database tables');
+  // await cleanDbTables(db);
+  // console.log('cleaned database tables');
 
-  await seedZips(db, sharedZips);
-  console.log('seeded zips table');
+  // await seedZips(db, sharedZips);
+  // console.log('seeded zips table');
 
-  await seedProperties(db, sharedZips);
-  console.log('seeded properties table');
+  // await seedLenders(db);
+  // console.log('seeded lenders table');
 
-  await seedLenders(db);
-  console.log('seeded lenders table');
+  // await seedLoans(db, sharedZips);
+  // console.log('seeded rates table');
 
-  await seedRates(db, sharedZips);
-  console.log('seeded rates table');
+  // await seedProperties(db, sharedZips);
+  // console.log('seeded properties table');
 
-  await db.end();
+
+  await setTimeout(() => seedZips(db, sharedZips), 1000)
+  await setTimeout(() => seedLenders(db), 1000)
+  await setTimeout(() => seedLoans(db, sharedZips), 1000)
+  await setTimeout(() => seedProperties(db, sharedZips), 1000)
+  // await db.end();
 };
 
 seedDb(dbConn).catch(console.log);
