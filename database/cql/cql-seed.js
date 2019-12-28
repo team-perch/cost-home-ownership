@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
+const path = require('path');
 const faker = require('faker/locale/en_US');
 const fs = require('fs');
 const Promise = require('bluebird');
@@ -136,10 +137,11 @@ const seedLoans = (conn, zips) => {
 
 const seedFromCSV = async (csvPath, conn) => {
   const data = await readFile(csvPath, 'utf8');
+  // const dataArr = data.split('\n').slice(0, 20).filter((line) => line.length > 0); // slice for testing a smaller subset of the 1million
   const dataArr = data.split('\n').filter((line) => line.length > 0);
   const startTime = Date.now();
 
-  // Create closure variable so multiple "workers" can execute at a time. Waiting for one "worker" to read a line of the file at a time would take ~3hours for the 10 million records
+  // Create closure variable so multiple "workers" can execute at a time. Waiting for one "worker" to read a line of the file at a time would take ~10hours for the 10 million records
   let linesRead = 0;
 
   const runWorker = async () => {
@@ -147,7 +149,7 @@ const seedFromCSV = async (csvPath, conn) => {
       const line = dataArr[linesRead];
       linesRead += 1;
       if (linesRead % 1000 === 0) {
-        console.log(`hi i am at line ${linesRead} and ${Date.now() - startTime}ms`);
+        console.log(`Now at line ${linesRead} and ${Date.now() - startTime}ms`);
       }
       await conn.execute(`INSERT INTO "perch_dev"."properties" (property_id, zip_code, property_cost, home_insurance_rate, hoa_monthly_dues, construction_year) VALUES (uuid(), ${line})`);
     }
@@ -177,29 +179,26 @@ const seedDb = async (conn) => {
   await cleanDbTables(db);
   console.log('cleaned database tables');
 
-  // await seedZips(db, sharedZips);
-  // console.log('seeded zips table');
+  await seedZips(db, sharedZips);
+  console.log('seeded zips table');
 
-  // await seedLenders(db);
-  // console.log('seeded lenders table');
+  await seedLenders(db);
+  console.log('seeded lenders table');
 
-  // await seedLoans(db, sharedZips);
-  // console.log('seeded rates table');
+  await seedLoans(db, sharedZips);
+  console.log('seeded loans table');
 
   // await seedProperties(db, sharedZips);
   // console.log('seeded properties table');
 
+  for (let i = 0; i < 10; i += 1) {
+    await seedFromCSV(path.resolve('../postgres/queries/query.csv'), db);
+  }
+  console.log('seeded properties table');
 
-  setTimeout(() => seedZips(db, sharedZips), 1000);
-  setTimeout(() => seedLenders(db), 1000);
-  setTimeout(() => seedLoans(db, sharedZips), 1000);
-  // setTimeout(async () => {
-  //   for (let i = 0; i < 10; i += 1) {
-  //     // eslint-disable-next-line no-await-in-loop
-  //     await seedFromCSV(path.resolve('../postgres/queries/query.csv'), db);
-  //   }
-  // }, 10000);
-  // await db.end();
+  console.log('database seeded! you did it!');
+
+  await db.shutdown();
 };
 
 seedDb(dbConn).catch(console.log);

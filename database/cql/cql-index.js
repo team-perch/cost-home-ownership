@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+/* eslint-disable no-await-in-loop */
 const fs = require('fs');
 const path = require('path');
 const cassandra = require('cassandra-driver');
@@ -37,11 +38,9 @@ const createDbTables = async (conn) => {
   const schemaFile = path.resolve(__dirname, 'cql-schema.cql');
   const createDBQuery = await readFile(schemaFile, 'utf8');
   const queriesArr = createDBQuery.split('\n\n').filter((line) => line.length > 0);
-  const promisesArr = [];
   for (let i = 0; i < queriesArr.length; i += 1) {
-    promisesArr.push(conn.execute(queriesArr[i]));
+    await conn.execute(queriesArr[i]);
   }
-  await Promise.all(promisesArr); // Can use await or return but not using the return value so clearer about intent to just do await
 };
 
 const cleanDbTables = async (conn) => {
@@ -51,11 +50,9 @@ const cleanDbTables = async (conn) => {
     'TRUNCATE TABLE properties;',
     'TRUNCATE TABLE zips;',
   ];
-  const promisesArr = [];
   for (let i = 0; i < queriesArr.length; i += 1) {
-    promisesArr.push(conn.execute(queriesArr[i]));
+    await conn.execute(queriesArr[i]);
   }
-  await Promise.all(promisesArr);
 };
 
 module.exports = {
