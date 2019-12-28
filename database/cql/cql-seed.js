@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const path = require('path');
+/* eslint-disable no-await-in-loop */
 const faker = require('faker/locale/en_US');
 const fs = require('fs');
 const Promise = require('bluebird');
@@ -139,7 +139,7 @@ const seedFromCSV = async (csvPath, conn) => {
   const dataArr = data.split('\n').filter((line) => line.length > 0);
   const startTime = Date.now();
 
-  // Create closure variable for
+  // Create closure variable so multiple "workers" can execute at a time. Waiting for one "worker" to read a line of the file at a time would take ~3hours for the 10 million records
   let linesRead = 0;
 
   const runWorker = async () => {
@@ -149,7 +149,6 @@ const seedFromCSV = async (csvPath, conn) => {
       if (linesRead % 1000 === 0) {
         console.log(`hi i am at line ${linesRead} and ${Date.now() - startTime}ms`);
       }
-      // eslint-disable-next-line no-await-in-loop
       await conn.execute(`INSERT INTO "perch_dev"."properties" (property_id, zip_code, property_cost, home_insurance_rate, hoa_monthly_dues, construction_year) VALUES (uuid(), ${line})`);
     }
   };
@@ -175,8 +174,8 @@ const seedDb = async (conn) => {
   await createDbTables(db);
   console.log('created database tables if non-existant');
 
-  // await cleanDbTables(db);
-  // console.log('cleaned database tables');
+  await cleanDbTables(db);
+  console.log('cleaned database tables');
 
   // await seedZips(db, sharedZips);
   // console.log('seeded zips table');
@@ -194,12 +193,12 @@ const seedDb = async (conn) => {
   setTimeout(() => seedZips(db, sharedZips), 1000);
   setTimeout(() => seedLenders(db), 1000);
   setTimeout(() => seedLoans(db, sharedZips), 1000);
-  setTimeout(async () => {
-    for (let i = 0; i < 10; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      await seedFromCSV(path.resolve('../postgres/queries/query.csv'), db);
-    }
-  }, 10000);
+  // setTimeout(async () => {
+  //   for (let i = 0; i < 10; i += 1) {
+  //     // eslint-disable-next-line no-await-in-loop
+  //     await seedFromCSV(path.resolve('../postgres/queries/query.csv'), db);
+  //   }
+  // }, 10000);
   // await db.end();
 };
 
