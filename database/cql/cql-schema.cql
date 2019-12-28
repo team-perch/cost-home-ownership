@@ -1,9 +1,10 @@
 CREATE TABLE IF NOT EXISTS properties(
   property_id uuid,
   zip_code int,
-  redfin_cost_estimate int,
-  insurance_rate decimal,
-  property_tax_rate int,
+  property_cost int,
+  home_insurance_rate decimal,
+  hoa_monthly_dues decimal,
+  construction_year int,
   PRIMARY KEY (property_id),
 );
 

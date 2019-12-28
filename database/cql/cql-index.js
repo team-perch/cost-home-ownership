@@ -11,7 +11,7 @@ const createDbConn = async (scopeAuth) => {
   } = scopeAuth[env];
 
   const options = {
-    contactPoints: ['h1', 'h2', 'localhost'],
+    contactPoints: ['localhost', 'localhost', 'localhost'],
     localDataCenter: 'datacenter1',
     credentials: {
       username: scopeAuth[env].user,

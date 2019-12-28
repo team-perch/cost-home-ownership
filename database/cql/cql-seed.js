@@ -1,6 +1,11 @@
 /* eslint-disable no-console */
+const path = require('path');
 const faker = require('faker/locale/en_US');
+const fs = require('fs');
+const Promise = require('bluebird');
 const { dbConn, createDbTables, cleanDbTables } = require('./cql-index');
+
+const readFile = Promise.promisify(fs.readFile);
 
 const seedZips = (conn, zips) => {
   const taxLow = 0.8;
@@ -10,41 +15,48 @@ const seedZips = (conn, zips) => {
   for (let i = 0; i < zips.length; i += 1) {
     const zip = zips[i];
     const taxRate = taxLow + faker.random.number(taxRange * 1000) / 1000;
-    const partialQuery = `INSERT INTO "perch_dev"."zips" (zip_code, property_tax_rate) VALUES (${zip}, ${taxRate});`;
-    queriesArr.push(partialQuery);
-  }
-  return conn.batch(queriesArr);
-};
-
-const seedProperties = (conn, zips) => {
-  const costLow = 600000;
-  const costRange = 2000000;
-
-  const insuranceLow = 0.1;
-  const insuranceRange = 0.2;
-
-  const propertyCount = 10;
-  const queriesArr = [];
-  for (let i = 1; i <= propertyCount; i += 1) {
-    const zip = zips[faker.random.number(zips.length - 1)];
-    const cost = costLow + faker.random.number(costRange / 10000) * 10000;
-    const insuranceRate = insuranceLow + faker.random.number(insuranceRange * 100) / 100;
-    const partialQuery = `INSERT INTO "perch_dev"."properties" (
-      property_id,
+    const partialQuery = `INSERT INTO "perch_dev"."zips" (
       zip_code,
-      redfin_cost_estimate,
-      insurance_rate
+      property_tax_rate
       ) VALUES (
-        uuid(),
-        ${zip},
-        ${cost},
-        ${insuranceRate}
+      ${zip},
+      ${taxRate}
       );`;
     queriesArr.push(partialQuery);
   }
-
-  return conn.batch(queriesArr);
+  return conn.batch(queriesArr, { prepare: true });
 };
+
+// Use the properties listed in the csv file instead
+// const seedProperties = (conn, zips) => {
+//   const costLow = 600000;
+//   const costRange = 2000000;
+
+//   const insuranceLow = 0.1;
+//   const insuranceRange = 0.2;
+
+//   const propertyCount = 1000;
+//   const queriesArr = [];
+//   for (let i = 1; i <= propertyCount; i += 1) {
+//     const zip = zips[faker.random.number(zips.length - 1)];
+//     const cost = costLow + faker.random.number(costRange / 10000) * 10000;
+//     const insuranceRate = insuranceLow + faker.random.number(insuranceRange * 100) / 100;
+//     const partialQuery = `INSERT INTO "perch_dev"."properties" (
+//       property_id,
+//       zip_code,
+//       redfin_cost_estimate,
+//       insurance_rate
+//       ) VALUES (
+//         uuid(),
+//         ${zip},
+//         ${cost},
+//         ${insuranceRate}
+//       );`;
+//     queriesArr.push(partialQuery);
+//   }
+
+//   return conn.batch(queriesArr, { prepare: true });
+// };
 
 const seedLenders = (conn) => {
   // TODO - use S3 API to programmatically retrieve list of urls
@@ -58,11 +70,19 @@ const seedLenders = (conn) => {
   const queriesArr = [];
   for (let i = 0; i < lenderCount; i += 1) {
     const nmls = faker.random.number({ min: 100000, max: 999999 });
-    const partialQuery = `INSERT INTO "perch_dev"."lenders" (lender_id, lender_logo_url, lender_nmls) VALUES (uuid(), '${lenderLogoUrls[i]}', ${nmls});`;
+    const partialQuery = `INSERT INTO "perch_dev"."lenders" (
+      lender_id,
+      lender_logo_url,
+      lender_nmls
+      ) VALUES (
+      uuid(),
+      '${lenderLogoUrls[i]}',
+      ${nmls}
+      );`;
     queriesArr.push(partialQuery);
   }
 
-  return conn.batch(queriesArr);
+  return conn.batch(queriesArr, { prepare: true });
 };
 
 const seedLoans = (conn, zips) => {
@@ -111,7 +131,33 @@ const seedLoans = (conn, zips) => {
     queriesArr.push(partialQuery);
   }
 
-  return conn.batch(queriesArr);
+  return conn.batch(queriesArr, { prepare: true });
+};
+
+const seedFromCSV = async (csvPath, conn) => {
+  const data = await readFile(csvPath, 'utf8');
+  const dataArr = data.split('\n').filter((line) => line.length > 0);
+  const startTime = Date.now();
+
+  // Create closure variable for
+  let linesRead = 0;
+
+  const runWorker = async () => {
+    while (linesRead < dataArr.length) {
+      const line = dataArr[linesRead];
+      linesRead += 1;
+      if (linesRead % 1000 === 0) {
+        console.log(`hi i am at line ${linesRead} and ${Date.now() - startTime}ms`);
+      }
+      // eslint-disable-next-line no-await-in-loop
+      await conn.execute(`INSERT INTO "perch_dev"."properties" (property_id, zip_code, property_cost, home_insurance_rate, hoa_monthly_dues, construction_year) VALUES (uuid(), ${line})`);
+    }
+  };
+  const workerArr = [];
+  for (let i = 0; i < 2000; i += 1) {
+    workerArr.push(runWorker());
+  }
+  await Promise.all(workerArr);
 };
 
 const seedDb = async (conn) => {
@@ -145,10 +191,15 @@ const seedDb = async (conn) => {
   // console.log('seeded properties table');
 
 
-  await setTimeout(() => seedZips(db, sharedZips), 1000)
-  await setTimeout(() => seedLenders(db), 1000)
-  await setTimeout(() => seedLoans(db, sharedZips), 1000)
-  await setTimeout(() => seedProperties(db, sharedZips), 1000)
+  setTimeout(() => seedZips(db, sharedZips), 1000);
+  setTimeout(() => seedLenders(db), 1000);
+  setTimeout(() => seedLoans(db, sharedZips), 1000);
+  setTimeout(async () => {
+    for (let i = 0; i < 10; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      await seedFromCSV(path.resolve('../postgres/queries/query.csv'), db);
+    }
+  }, 10000);
   // await db.end();
 };
 
