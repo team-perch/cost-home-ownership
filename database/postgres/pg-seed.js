@@ -131,15 +131,16 @@ const buildPropertiesString = async (conn, zips) => {
 };
 
 const createCSV = async (query) => {
-  if (!fs.existsSync('queries/query.csv')) {
-    await appendFile('queries/query.csv', query)
-      .then((err) => {
-        if (err) {
-          throw err;
-        }
-        console.log('I wrote the file!');
-      });
+  if (fs.existsSync('queries/query.csv')) {
+    fs.unlinkSync('queries/query.csv');
   }
+  await appendFile('queries/query.csv', query)
+    .then((err) => {
+      if (err) {
+        throw err;
+      }
+      console.log('I wrote the file!');
+    });
 };
 
 const seedFromCSV = (csvPath, conn) => {
@@ -152,14 +153,20 @@ const seedFromCSV = (csvPath, conn) => {
 const seedDb = async (conn) => {
   const db = await conn;
 
-  let sharedZips = new Set();
-  while (sharedZips.size < 10) {
-    const zip = faker.address.zipCode();
-    if (zip.length === 5) {
-      sharedZips.add(zip);
-    }
+  // I want to increase the number of zip codes used so use the below instead
+  // let sharedZips = new Set();
+  // while (sharedZips.size < 10) {
+  //   const zip = faker.address.zipCode();
+  //   if (zip.length === 5) {
+  //     sharedZips.add(zip);
+  //   }
+  // }
+  // sharedZips = [...sharedZips];
+
+  const sharedZips = [];
+  for (let i = 11111; i <= 99999; i += 1) {
+    sharedZips.push(i);
   }
-  sharedZips = [...sharedZips];
 
   await createDbTables(db);
   console.log('created database tables if non-existant');
@@ -176,7 +183,7 @@ const seedDb = async (conn) => {
   await seedLoans(db, sharedZips);
   console.log('seeded loans table');
 
-  await buildPropertiesString(db, sharedZips) // my async here is not working because the file is getting read before written for one of the 10 loops - fix later
+  await buildPropertiesString(db, sharedZips)
     .then(async (result) => {
       await createCSV(result);
     })
