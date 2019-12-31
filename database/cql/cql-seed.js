@@ -159,7 +159,7 @@ const seedFromCSV = async (csvPath, conn) => {
     }
   };
   const workerArr = [];
-  for (let i = 0; i < 2000; i += 1) {
+  for (let i = 0; i < 1900; i += 1) {
     workerArr.push(runWorker());
   }
   await Promise.all(workerArr);
@@ -169,19 +169,19 @@ const seedDb = async (conn) => {
   const db = await conn;
 
   // I want to increase the number of zip codes used so use the below instead
-  // let sharedZips = new Set();
-  // while (sharedZips.size < 10) {
-  //   const zip = faker.address.zipCode();
-  //   if (zip.length === 5) {
-  //     sharedZips.add(zip);
-  //   }
-  // }
-  // sharedZips = [...sharedZips];
-
-  const sharedZips = [];
-  for (let i = 11111; i <= 99999; i += 1) {
-    sharedZips.push(i);
+  let sharedZips = new Set();
+  while (sharedZips.size < 10) {
+    const zip = faker.address.zipCode();
+    if (zip.length === 5) {
+      sharedZips.add(zip);
+    }
   }
+  sharedZips = [...sharedZips];
+
+  // const sharedZips = [];
+  // for (let i = 11111; i <= 99999; i += 1) {
+  //   sharedZips.push(i);
+  // }
 
   await createDbTables(db);
   console.log('created database tables if non-existant');

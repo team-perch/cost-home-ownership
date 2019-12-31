@@ -9,9 +9,6 @@ CREATE TABLE IF NOT EXISTS properties(
 );
 
 CREATE TABLE IF NOT EXISTS loans(
-  lender_id uuid,
-  lender_logo_url text,
-  lender_nmls int,
   loan_id uuid,
   zip_code text,
   apr decimal,
@@ -22,15 +19,14 @@ CREATE TABLE IF NOT EXISTS loans(
   down_payment_min int,
   credit_min int,
   origination_year int,
-  PRIMARY KEY (lender_id, loan_id),
+  PRIMARY KEY (loan_id),
 );
 
 CREATE TABLE IF NOT EXISTS lenders(
   lender_id uuid,
-  loan_id uuid,
   lender_logo_url text,
   lender_nmls int,
-  PRIMARY KEY (lender_id, loan_id),
+  PRIMARY KEY (lender_id),
 );
 
 CREATE TABLE IF NOT EXISTS zips(
