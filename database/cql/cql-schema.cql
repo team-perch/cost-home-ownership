@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS properties(
-  property_id int,
+  property_id uuid,
   zip_code int,
   property_cost int,
   home_insurance_rate decimal,

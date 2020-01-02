@@ -7,8 +7,6 @@ const Promise = require('bluebird');
 const { dbConn, createDbTables, cleanDbTables } = require('./cql-index');
 
 const readFile = Promise.promisify(fs.readFile);
-const startTime = Date.now();
-let propertyRecordIndex = 1;
 
 const seedZips = (conn, zips) => {
   const taxLow = 0.8;
@@ -141,6 +139,7 @@ const seedFromCSV = async (csvPath, conn) => {
   const data = await readFile(csvPath, 'utf8');
   // const dataArr = data.split('\n').slice(0, 20).filter((line) => line.length > 0); // slice for testing a smaller subset of the 1million
   const dataArr = data.split('\n').filter((line) => line.length > 0);
+  const startTime = Date.now();
 
   // Create closure variable so multiple "workers" can execute at a time. Waiting for one "worker" to read a line of the file at a time would take ~10hours for the 10 million records
   let linesRead = 0;
@@ -149,17 +148,14 @@ const seedFromCSV = async (csvPath, conn) => {
     while (linesRead < dataArr.length) {
       const line = dataArr[linesRead];
       linesRead += 1;
-      if (linesRead % 10000 === 0) {
+      if (linesRead % 1000 === 0) {
         console.log(`Now at line ${linesRead} and ${Date.now() - startTime}ms`);
       }
-      await conn.execute(`INSERT INTO "perch_dev"."properties" (property_id, zip_code, property_cost, home_insurance_rate, hoa_monthly_dues, construction_year) VALUES (${propertyRecordIndex}, ${line})`)
-        .then(() => {
-          propertyRecordIndex += 1;
-        });
+      await conn.execute(`INSERT INTO "perch_dev"."properties" (property_id, zip_code, property_cost, home_insurance_rate, hoa_monthly_dues, construction_year) VALUES (uuid(), ${line})`);
     }
   };
   const workerArr = [];
-  for (let i = 0; i < 1900; i += 1) {
+  for (let i = 0; i < 2000; i += 1) {
     workerArr.push(runWorker());
   }
   await Promise.all(workerArr);
@@ -168,7 +164,6 @@ const seedFromCSV = async (csvPath, conn) => {
 const seedDb = async (conn) => {
   const db = await conn;
 
-  // I want to increase the number of zip codes used so use the below instead
   let sharedZips = new Set();
   while (sharedZips.size < 10) {
     const zip = faker.address.zipCode();
@@ -177,11 +172,6 @@ const seedDb = async (conn) => {
     }
   }
   sharedZips = [...sharedZips];
-
-  // const sharedZips = [];
-  // for (let i = 11111; i <= 99999; i += 1) {
-  //   sharedZips.push(i);
-  // }
 
   await createDbTables(db);
   console.log('created database tables if non-existant');
