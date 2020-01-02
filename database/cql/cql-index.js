@@ -1,86 +1,58 @@
 /* eslint-disable no-console */
+/* eslint-disable no-await-in-loop */
 const fs = require('fs');
 const path = require('path');
+const cassandra = require('cassandra-driver');
+const Promise = require('bluebird');
 const auth = require('./cql-auth');
+
+const readFile = Promise.promisify(fs.readFile);
 
 const createDbConn = async (scopeAuth) => {
   const env = process.env.NODE_ENV || 'dev';
-  const {
-    user, password, host,
-  } = scopeAuth[env];
+  const { user, password, host } = scopeAuth[env];
 
   const options = {
-    contactPoints,
-    localDataCenter,
-    pooling: {
-      coreConnectionsPerHost: {
-        [distance.local]: 2,
-        [distance.remote]: 1
-      }
-    }
+    contactPoints: [scopeAuth[env].host],
+    localDataCenter: 'datacenter1',
+    credentials: {
+      username: scopeAuth[env].user,
+      password: scopeAuth[env].password,
+    },
   };
-
-  const client = new Client(options);
-
-  const state = client.getState();
-  for (let host of state.getConnectedHosts()) {
-    console.log('Host %s: open connections = %d; in flight queries = %d',
-      host.address, state.getOpenConnections(host), state.getInFlightQueries(host));
-  }
-
-
+  const client = new cassandra.Client(options);
   const database = `perch_${env}`;
-  const query = `
-    DROP KEYSPACE ${database} IF EXISTS;
-    CREATE KEYSPACE ${database} WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };
+  const query1 = `DROP KEYSPACE IF EXISTS ${database};`;
+  const query2 = `CREATE KEYSPACE ${database} WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : 3 };`;
+  const query3 = `USE ${database};`;
 
-    USE ${database};
-  `;
-  await conn.query(query);
-  await conn.end();
+  await client.connect();
+  await client.execute(query1);
+  await client.execute(query2);
+  await client.execute(query3);
 
-
-
-
-  let pool;
-  try {
-    pool = mysql.createPool({
-      host,
-      user,
-      database,
-      password,
-      multipleStatements: true,
-      connectionLimit: 10,
-      queueLimit: 0,
-    });
-  } catch (error) {
-    console.log(`error creating pool for mysql database '${database}'`);
-    console.log(error);
-  }
-
-  console.log(`MySQL connected for '${env}' env to database '${database}'`);
-  return pool;
+  return client;
 };
 
-const createDbTables = (conn) => {
+const createDbTables = async (conn) => {
   const schemaFile = path.resolve(__dirname, 'cql-schema.cql');
-  const createDBQuery = fs.readFileSync(schemaFile).toString();
-
-  return conn.query(createDBQuery);
+  const createDBQuery = await readFile(schemaFile, 'utf8');
+  const queriesArr = createDBQuery.split('\n\n').filter((line) => line.length > 0);
+  for (let i = 0; i < queriesArr.length; i += 1) {
+    await conn.execute(queriesArr[i]);
+  }
 };
 
-const cleanDbTables = (conn) => {
-  const query = `
-    SET FOREIGN_KEY_CHECKS = 0;
-
-    TRUNCATE TABLE rates;
-    TRUNCATE TABLE lenders;
-    TRUNCATE TABLE properties;
-    TRUNCATE TABLE zips;
-
-    SET FOREIGN_KEY_CHECKS = 1;
-  `;
-  return conn.query(query);
+const cleanDbTables = async (conn) => {
+  const queriesArr = [
+    'TRUNCATE TABLE loans;',
+    'TRUNCATE TABLE lenders;',
+    'TRUNCATE TABLE properties;',
+    'TRUNCATE TABLE zips;',
+  ];
+  for (let i = 0; i < queriesArr.length; i += 1) {
+    await conn.execute(queriesArr[i]);
+  }
 };
 
 module.exports = {
