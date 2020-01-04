@@ -51,6 +51,7 @@ class App extends React.Component {
 
   async getPropertyData(id) {
     try {
+      console.log(`${host}/api/costHomeOwnership/properties?id=${id}`);
       const res = await axios.get(`${host}/api/costHomeOwnership/properties?id=${id}`);
       const {
         propertyId,

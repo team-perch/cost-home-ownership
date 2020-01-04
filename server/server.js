@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+require('newrelic');
 const controller = require('./pg-controller.js');
 // const controller = require('./mysql-controller.js');
 const app = require('./app');
