@@ -8,9 +8,9 @@ CREATE TABLE IF NOT EXISTS zips(
 CREATE TABLE IF NOT EXISTS properties(
   property_id SERIAL,
   zip_code INTEGER,
-  property_cost MONEY,
+  property_cost INTEGER,
   home_insurance_rate DECIMAL(5,3),
-  hoa_monthly_dues MONEY,
+  hoa_monthly_dues INTEGER,
   construction_year SMALLINT,
   FOREIGN KEY (zip_code) REFERENCES zips(zip_code),
   CONSTRAINT property_id PRIMARY KEY (property_id)
@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS lenders(
 CREATE TABLE IF NOT EXISTS loans(
   loan_id SERIAL,
   lender_id INTEGER,
-  zip_code INTEGER,
+  zip_code_low INTEGER,
+  zip_code_high INTEGER,
   apr DECIMAL(5,3),
   term SMALLINT,
   loan_type VARCHAR(5),
@@ -35,7 +36,7 @@ CREATE TABLE IF NOT EXISTS loans(
   down_payment_min DECIMAL(4,1),
   credit_min SMALLINT,
   origination_year INTEGER,
-  FOREIGN KEY (zip_code) REFERENCES zips(zip_code),
+  -- FOREIGN KEY (zip_code) REFERENCES zips(zip_code),
   FOREIGN KEY (lender_id) REFERENCES lenders(lender_id),
   CONSTRAINT loan_id PRIMARY KEY (loan_id)
 );

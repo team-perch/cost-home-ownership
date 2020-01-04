@@ -4,7 +4,8 @@ const path = require('path');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const compression = require('compression');
-const controller = require('./controller');
+const controller = require('./pg-controller');
+// const controller = require('./mysql-controller');
 const keysToCamel = require('./camelCaseUtil');
 
 const app = express();
@@ -24,23 +25,64 @@ app.get('/api/costHomeOwnership/properties', async (req, res) => {
     return;
   }
   try {
-    const [properties] = await controller.getPropertyData(id);
-    res.json(keysToCamel(properties));
+    const propertyInfo = await controller.getPropertyData(id);
+    res.json(keysToCamel(propertyInfo.rows));
   } catch (err) {
+    console.log(err);
     res.status(500).end('server could not retrieve property data');
   }
 });
 
 app.post('/api/costHomeOwnership/properties', async (req, res) => {
-  // Write function to post req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be overwritten
-});
-
-app.put('/api/costHomeOwnership/properties', async (req, res) => {
-// Write function to update req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be created new
+  const {
+    zip,
+    propertyCost,
+    homeInsuranceRate,
+    hoa,
+    constructionYear,
+  } = req.body;
+  if (req.body === undefined) {
+    res.status(400).end('missing parameters');
+    return;
+  }
+  try {
+    await controller.addProperty(zip, propertyCost, homeInsuranceRate, hoa, constructionYear);
+    res.status(200).end('inserted new property!');
+  } catch (err) {
+    console.log(err);
+    res.status(500).end('server could not retrieve property data');
+  }
 });
 
 app.delete('/api/costHomeOwnership/properties', async (req, res) => {
-// Write function to delete req.body to the database based on the propertyId. If the propertyId doesn't exist, confirm with user what they want to delete
+  const { id } = req.query;
+  if (id === undefined) {
+    res.status(400).end('missing query parameters');
+    return;
+  }
+  try {
+    const propertyInfo = await controller.deleteProperty(id);
+    res.json(`You just deleted this many rows: ${propertyInfo.rowCount}`);
+  } catch (err) {
+    console.log(err);
+    res.status(500).end('server could not delete property data');
+  }
+});
+
+app.patch('/api/costHomeOwnership/properties', async (req, res) => {
+  const updatesObj = req.query;
+  const { property_id } = req.query;
+  if (property_id === undefined) {
+    res.status(400).end('missing query parameters');
+    return;
+  }
+  try {
+    const propertyInfo = await controller.updateProperty(property_id, updatesObj);
+    res.json(`You updated this many rows: ${propertyInfo.rowCount}`);
+  } catch (err) {
+    console.log(err);
+    res.status(500).end('server could not retrieve property data');
+  }
 });
 
 
@@ -60,11 +102,12 @@ app.get('/api/costHomeOwnership/rates', async (req, res) => {
     cost, zipCode, term, type, downPay, credit, origYear,
   } = queries;
   try {
-    const [rates] = await controller.getRates(
+    const rates = await controller.getRates(
       cost, zipCode, term, type, downPay, credit, origYear,
     );
-    res.json(keysToCamel(rates));
+    res.json(keysToCamel(rates.rows));
   } catch (err) {
+    console.log(err);
     res.status(500).end('server could not retrieve rates data');
   }
 });
@@ -74,11 +117,11 @@ app.post('/api/costHomeOwnership/rates', async (req, res) => {
 });
 
 app.put('/api/costHomeOwnership/rates', async (req, res) => {
-// Write function to update req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be created new
+  // Write function to update req.body to the database based on the propertyId. If the propertyId is already taken, confirm if the user wants it to be created new
 });
 
 app.delete('/api/costHomeOwnership/rates', async (req, res) => {
-// Write function to delete req.body to the database based on the propertyId. If the propertyId doesn't exist, confirm with user what they want to delete
+  // Write function to delete req.body to the database based on the propertyId. If the propertyId doesn't exist, confirm with user what they want to delete
 });
 
 module.exports = app;

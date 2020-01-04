@@ -23,10 +23,10 @@ class App extends React.Component {
     this.state = {
       propertyId: props.id,
       zipCode: '',
-      redfinCostEstimate: null,
-      insuranceRate: null,
+      propertyCost: null,
+      homeInsuranceRate: null,
       propertyTaxRate: null,
-      hoa: 200,
+      hoaMonthlyDues: 200,
       cost: 10,
       loanType: formatLoan(30, 'Fixed'),
       loanTypes: [
@@ -55,8 +55,10 @@ class App extends React.Component {
       const {
         propertyId,
         zipCode,
-        redfinCostEstimate,
-        insuranceRate,
+        propertyCost,
+        homeInsuranceRate,
+        hoaMonthlyDues,
+        constructionYear,
         propertyTaxRate,
       } = await res.data[0];
 
@@ -64,10 +66,11 @@ class App extends React.Component {
       this.setState({
         propertyId,
         zipCode,
-        redfinCostEstimate,
-        insuranceRate,
-        propertyTaxRate,
-        cost: redfinCostEstimate,
+        propertyCost,
+        homeInsuranceRate: homeInsuranceRate * 1,
+        hoaMonthlyDues,
+        propertyTaxRate: propertyTaxRate * 1,
+        cost: propertyCost,
       }, this.getRates);
     } catch (err) {
       console.log(err);
@@ -93,7 +96,6 @@ class App extends React.Component {
       console.log(`${host}/api/costHomeOwnership/rates?${queryString}`);
       const res = await axios.get(`${host}/api/costHomeOwnership/rates?${queryString}`);
       const rates = await res.data;
-
       this.setState({ rates });
     } catch (err) {
       console.log(err);
@@ -106,7 +108,7 @@ class App extends React.Component {
 
   render() {
     const {
-      insuranceRate,
+      homeInsuranceRate,
       propertyTaxRate,
       loanType,
       loanTypes,
@@ -114,9 +116,9 @@ class App extends React.Component {
       rateUser,
       rates,
       cost,
-      hoa,
+      hoaMonthlyDues,
       downPay,
-      redfinCostEstimate,
+      propertyCost,
     } = this.state;
 
     return (
@@ -128,12 +130,12 @@ class App extends React.Component {
             </Label>
           </ModuleHeader>
           <Summary
-            insuranceRate={insuranceRate}
+            insuranceRate={homeInsuranceRate}
             propertyTaxRate={propertyTaxRate}
             loanType={loanType}
             rateUser={rateUser}
             cost={cost}
-            hoa={hoa}
+            hoa={hoaMonthlyDues}
             downPay={downPay}
           />
           <CostInputs
@@ -141,7 +143,7 @@ class App extends React.Component {
             handleUserSubmit={this.handleUserSubmit}
             cost={cost}
             downPay={downPay}
-            redfinCostEstimate={redfinCostEstimate}
+            propertyCost={propertyCost}
           />
           <Rates
             // add key

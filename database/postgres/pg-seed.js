@@ -58,10 +58,11 @@ const seedLoans = (conn, zips) => {
   const terms = [3, 5, 7, 10, 10, 15, 15, 20, 30, 30, 30, 30];
   const types = ['ARM', 'Fixed', 'Fixed'];
 
-  const loanCount = 10;
+  const loanCount = 10000;
   let query = '';
   for (let i = 0; i < loanCount; i += 1) {
-    const zip = zips[faker.random.number(zips.length - 1)];
+    const zipLow = zips[faker.random.number(zips.length - 1)];
+    const zipHigh = zipLow + 10000;
     const apr = faker.random.number({ min: 4, max: 5.25, precision: 0.001 });
     const type = types[faker.random.number(types.length - 1)];
     const term = terms[faker.random.number(type === 'Fixed'
@@ -74,7 +75,8 @@ const seedLoans = (conn, zips) => {
     const lenderId = faker.random.number({ min: 1, max: 3 });
 
     const partialQuery = `INSERT INTO loans (
-      zip_code,
+      zip_code_low,
+      zip_code_high,
       apr,
       term,
       loan_type,
@@ -85,7 +87,8 @@ const seedLoans = (conn, zips) => {
       lender_id,
       origination_year
     ) VALUES (
-      ${zip},
+      ${zipLow},
+      ${zipHigh},
       ${apr},
       ${term},
       '${type}',
