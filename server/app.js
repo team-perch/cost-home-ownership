@@ -13,7 +13,7 @@ app.use(cors());
 app.use(compression());
 
 app.use(express.static(path.resolve(__dirname, '..', 'public')));
-app.use(express.static(path.resolve(__dirname, '..', '/loaderio-2e2b9404c5dc3b15c5c889d8361a0424.txt')));
+app.use('/loaderio-2e2b9404c5dc3b15c5c889d8361a0424.txt', express.static(path.resolve(__dirname, '..', '/loaderio-2e2b9404c5dc3b15c5c889d8361a0424.txt')));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // PROPERTIES
