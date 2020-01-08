@@ -10,7 +10,7 @@ import { formatLoan, unFormatLoan } from './utils';
 import { AppContainer, ModuleHeader, Label } from './components/styles.jsx';
 
 const localhost = 'http://localhost:3001';
-const aws = 'http://18.191.177.158:3001';
+const aws = 'http://13.58.223.39:3001';
 const { origin } = window.location;
 const host = (origin && !origin.includes('localhost')) ? aws : localhost;
 if (host === localhost) {
