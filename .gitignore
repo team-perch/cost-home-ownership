@@ -30,5 +30,8 @@ public/bundle.js
 cql-auth.js
 auth.js
 pg-auth.js
+newrelic.js
+test.yml
 
 database/postgres/queries/
+database/postgres/tables/

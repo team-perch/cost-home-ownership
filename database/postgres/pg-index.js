@@ -12,38 +12,44 @@ const createDbConn = async (scopeAuth) => {
     user, password, host,
   } = scopeAuth[env];
 
-  const conn = new pg.Client({
-    user,
-    host,
-    password,
-    port,
-    database: 'postgres',
-  });
-  // I tried to set up unique users but permission is denied - need to fix later
-  // const setupUser = `
-  //   CREATE ROLE ${scopeAuth[env].user} WITH LOGIN PASSWORD '${scopeAuth[env].password}';
-  //   ALTER ROLE ${scopeAuth[env].user} CREATEDB;
+  //const database = `loans_${env}`;
+  const database = `loans_dev`;
+
+  // Need to fix - can create the database using the database interface for seeding instead of the below because if I leave this as is, it drops the database and re-creates it, but doesn't re-seed it
+
+  // const conn = new pg.Client({
+  //   user,
+  //   host,
+  //   password,
+  //   port,
+  //   database: 'postgres',
+  // });
+  // // I tried to set up unique users but permission is denied - need to fix later
+  // // const setupUser = `
+  // //   CREATE ROLE ${scopeAuth[env].user} WITH LOGIN PASSWORD '${scopeAuth[env].password}';
+  // //   ALTER ROLE ${scopeAuth[env].user} CREATEDB;
+  // // `;
+
+
+  // const dropDb = `
+  //   DROP DATABASE IF EXISTS ${database};
   // `;
-  const database = `loans_${env}`;
-  const dropDb = `
-    DROP DATABASE IF EXISTS ${database};
-  `;
-  const createDb = `
-    CREATE DATABASE ${database};
-  `;
-  await conn.connect();
-  // await conn.query(setupUser);
-  await conn.query(dropDb);
-  await conn.query(createDb);
-  await conn.end();
+  // const createDb = `
+  //   CREATE DATABASE ${database};
+  // `;
+  // await conn.connect();
+  // // await conn.query(setupUser);
+  // await conn.query(dropDb);
+  // await conn.query(createDb);
+  // await conn.end();
 
   let pool;
   try {
     pool = new pg.Pool({
-      host,
-      user,
+      host: 'http://18.225.9.138',
+      user: 'suejungshin',
       database,
-      password,
+      password: 'postgres',
       port,
     });
   } catch (error) {
