@@ -13,7 +13,7 @@ app.use(cors());
 app.use(compression());
 
 app.use(express.static(path.resolve(__dirname, '..', 'public')));
-app.use('/loaderio-a8e10d693710fa4af7998b0dfb02bc89.txt', express.static(path.resolve(__dirname, '..', '/loaderio-a8e10d693710fa4af7998b0dfb02bc89.txt')));
+app.use('/loaderio-a8e10d693710fa4af7998b0dfb02bc89.txt', express.static(path.resolve(__dirname, '..', 'loaderio-a8e10d693710fa4af7998b0dfb02bc89.txt')));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // PROPERTIES
