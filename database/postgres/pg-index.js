@@ -46,7 +46,7 @@ const createDbConn = async (scopeAuth) => {
   let pool;
   try {
     pool = new pg.Pool({
-      host: 'http://18.225.9.138',
+      host: '18.225.9.138',
       user: 'suejungshin',
       database,
       password: 'postgres',
