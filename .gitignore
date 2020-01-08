@@ -34,3 +34,4 @@ newrelic.js
 test.yml
 
 database/postgres/queries/
+database/postgres/tables/

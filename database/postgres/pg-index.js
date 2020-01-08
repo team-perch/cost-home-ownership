@@ -12,7 +12,8 @@ const createDbConn = async (scopeAuth) => {
     user, password, host,
   } = scopeAuth[env];
 
-  const database = `loans_${env}`;
+  //const database = `loans_${env}`;
+  const database = `loans_dev`;
 
   // Need to fix - can create the database using the database interface for seeding instead of the below because if I leave this as is, it drops the database and re-creates it, but doesn't re-seed it
 
@@ -45,10 +46,10 @@ const createDbConn = async (scopeAuth) => {
   let pool;
   try {
     pool = new pg.Pool({
-      host,
-      user,
+      host: 'http://18.225.9.138',
+      user: 'suejungshin',
       database,
-      password,
+      password: 'postgres',
       port,
     });
   } catch (error) {

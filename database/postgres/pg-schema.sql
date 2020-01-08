@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS loans(
 );
 
 -- making these indices seemed to decrease the query speeds, so commented it out
--- CREATE INDEX zip_code_index ON zips(zip_code);
--- CREATE INDEX property_id_index ON properties(property_id);
--- CREATE INDEX lender_id_index ON lenders(lender_id);
--- CREATE INDEX loan_id_index ON loans(loan_id);
+CREATE INDEX zip_code_index ON zips(zip_code);
+CREATE INDEX property_id_index ON properties(property_id);
+CREATE INDEX lender_id_index ON lenders(lender_id);
+CREATE INDEX loan_id_index ON loans(loan_id);
