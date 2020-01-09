@@ -53,7 +53,7 @@ class App extends React.Component {
     try {
       // console.log(`${host}/api/costHomeOwnership/properties?id=${id}`);
       // const res = await axios.get(`${host}/api/costHomeOwnership/properties?id=${id}`);
-      console.log(`$/api/costHomeOwnership/properties?id=${id}`);
+      console.log(`/api/costHomeOwnership/properties?id=${id}`);
       const res = await axios.get(`/api/costHomeOwnership/properties?id=${id}`);
       const {
         propertyId,
