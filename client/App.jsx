@@ -51,8 +51,10 @@ class App extends React.Component {
 
   async getPropertyData(id) {
     try {
-      console.log(`${host}/api/costHomeOwnership/properties?id=${id}`);
-      const res = await axios.get(`${host}/api/costHomeOwnership/properties?id=${id}`);
+      // console.log(`${host}/api/costHomeOwnership/properties?id=${id}`);
+      // const res = await axios.get(`${host}/api/costHomeOwnership/properties?id=${id}`);
+      console.log(`$/api/costHomeOwnership/properties?id=${id}`);
+      const res = await axios.get(`/api/costHomeOwnership/properties?id=${id}`);
       const {
         propertyId,
         zipCode,
@@ -94,8 +96,10 @@ class App extends React.Component {
       .join('&');
 
     try {
-      console.log(`${host}/api/costHomeOwnership/rates?${queryString}`);
-      const res = await axios.get(`${host}/api/costHomeOwnership/rates?${queryString}`);
+      // console.log(`${host}/api/costHomeOwnership/rates?${queryString}`);
+      // const res = await axios.get(`${host}/api/costHomeOwnership/rates?${queryString}`);
+      console.log(`/api/costHomeOwnership/rates?${queryString}`);
+      const res = await axios.get(`/api/costHomeOwnership/rates?${queryString}`);
       const rates = await res.data;
       this.setState({ rates });
     } catch (err) {
