@@ -69,11 +69,11 @@ class App extends React.Component {
       this.setState({
         propertyId,
         zipCode,
-        propertyCost,
+        propertyCost: parseInt(propertyCost, 10),
         homeInsuranceRate: homeInsuranceRate * 1,
         hoaMonthlyDues,
         propertyTaxRate: propertyTaxRate * 1,
-        cost: propertyCost,
+        cost: parseInt(propertyCost, 10),
       }, this.getRates);
     } catch (err) {
       console.log(err);
@@ -148,7 +148,7 @@ class App extends React.Component {
             handleUserSubmit={this.handleUserSubmit}
             cost={cost}
             downPay={downPay}
-            propertyCost={propertyCost}
+            redfinCostEstimate={propertyCost}
           />
           <Rates
             // add key
