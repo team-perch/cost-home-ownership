@@ -14,6 +14,7 @@ app.use(compression());
 
 app.use(express.static(path.resolve(__dirname, '..', 'public')));
 app.use('/loaderio-7294cc829949225774688c6ede3b6e3e.txt', express.static(path.resolve(__dirname, '..', 'loaderio-7294cc829949225774688c6ede3b6e3e.txt')));
+app.use('/loaderio-dbcffd037e48be3f67dea79101dc111b.txt', express.static(path.resolve(__dirname, '..', 'loaderio-dbcffd037e48be3f67dea79101dc111b.txt')));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // PROPERTIES
